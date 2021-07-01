@@ -1,8 +1,34 @@
+import itertools
 import numpy as np
 from numpy import random
 from sklearn.utils import shuffle
 import tensorflow as tf
+import random
+from keras.utils import to_categorical
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+def samples_per_class(n, val, classes):
+    set_x, set_y = load_dataset()
+    train_x, train_y, test_x, test_y, x_unlabeled = list(), list(), list(), list(), list()
+    for i in range(classes):
+        temp_x, temp_y = list(), list()
+        for j in range(len(set_y)):
+            if set_y[j][i] == max(set_y[j]):
+                temp_x.append(set_x[j])
+                temp_y.append(set_y[j])
+        temp_x, temp_y = shuffle(temp_x, temp_y)
+        train_x.append(temp_x[:n])
+        train_y.append(temp_y[:n])
+        test_x.append(temp_x[n:n + val])
+        test_y.append(temp_y[n:n + val])
+        x_unlabeled.append(temp_x[(n + val):])
+    train_x = list(itertools.chain(*train_x))
+    train_y = list(itertools.chain(*train_y))
+    test_x = list(itertools.chain(*test_x))
+    test_y = list(itertools.chain(*test_y))
+    x_unlabeled = list(itertools.chain(*x_unlabeled))
+    return np.array(train_x), np.array(train_y), np.array(test_x), np.array(test_y), np.array(x_unlabeled)
+
 
 def load_dataset():
     (_, _), (set_x, _) = tf.keras.datasets.cifar10.load_data()
@@ -11,6 +37,24 @@ def load_dataset():
     set_x.astype(np.float32)
     set_x = set_x / 255.0
     return set_x, set_y
+
+    '''
+    X, y = dataset
+    X_list, y_list = list(), list()
+    n_per_class = int(n_samples / n_classes)
+    for i in range(n_classes):
+        temp_list = list()
+        for j in range(len(y)):
+            if y[j][i] > 0.5:
+                temp_list.append(X[j])
+        # get all images for this class
+        X_with_class = temp_list
+        # choose random instances
+        ix = randint(0, len(X_with_class), n_per_class)
+        # add to list
+        [X_list.append(X_with_class[j]) for j in ix]
+        [y_list.append(i) for j in ix]
+    '''
 
 def load_split_dataset(val):
     (_, _), (set_x, _) = tf.keras.datasets.cifar10.load_data()
@@ -24,6 +68,43 @@ def load_split_dataset(val):
     test_y = set_y[:i_test]
     train_y = set_y[i_test:]
     return train_x, train_y, test_x, test_y
+
+def load_split_dataset_normal(val):
+    (_, _), (set_x, set_y) = tf.keras.datasets.cifar10.load_data()
+    set_y = to_categorical(set_y)
+    set_x, set_y = shuffle(set_x, set_y)
+    set_x.astype(np.float32)
+    set_x = set_x / 255.0
+    i_test = round(len(set_x) * val)
+    test_x = set_x[:i_test]
+    train_x = set_x[i_test:]
+    test_y = set_y[:i_test]
+    train_y = set_y[i_test:]
+    return train_x, train_y, test_x, test_y
+
+def load_k_fold(k):
+    (_, _), (set_x, _) = tf.keras.datasets.cifar10.load_data()
+    set_y = np.load("cifar10h-probs.npy")
+    set_x, set_y = shuffle(set_x, set_y)
+    set_x.astype(np.float32)
+    set_x = set_x / 255.0
+    val = 1.0 / k
+    n = round(len(set_x) * val)
+    sets_x = []
+    sets_y = []
+    for i in range(k-1):
+        cur_n = n * (i + 1)
+        prev_n = n * i
+        cur_set_x = set_x[prev_n:cur_n]
+        cur_set_y = set_y[prev_n:cur_n]
+        sets_x.append(cur_set_x)
+        sets_y.append(cur_set_y)
+    cur_n = n*(k - 1)
+    cur_set_x = set_x[cur_n:]
+    cur_set_y = set_y[cur_n:]
+    sets_x.append(cur_set_x)
+    sets_y.append(cur_set_y)
+    return sets_x, sets_y
 
 def naive_mix_up(x, y, rounds, alpha):
     set_x = x

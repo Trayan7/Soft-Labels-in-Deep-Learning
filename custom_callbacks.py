@@ -2,8 +2,9 @@ import tensorflow as tf
 import tensorflow.keras as keras
 
 class CustomCallback(keras.callbacks.Callback):
-    def on_epoch_begin(self, epoch, logs=None):
+    def on_epoch_end(self, epoch, logs=None):
         keys = list(logs.keys())
+        y_pred = self.model.predict(self.validation_data[0])
         print("Start epoch {} of training; got log keys: {}".format(epoch, keys))
 '''
     def on_train_begin(self, logs=None):
