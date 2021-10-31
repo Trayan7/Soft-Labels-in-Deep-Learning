@@ -1,8 +1,10 @@
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
+import os
+import sys
+
 import numpy as np
-from process_data import load_plankton, load_plankton_direct
 from sklearn.utils import shuffle
+
+from data_handling.datasets import load_plankton_direct
 
 x, y = load_plankton_direct()
 
@@ -29,11 +31,13 @@ np.save('plankton_y_fix', new_y)
 np.save('duplicates_plankton_x_fix', dupes)
 
 def check_for_duplicates():
-    fix_val = np.load('E:/Uni/Masterarbeit/Semi-supervised/fixmatch_val.npy')
-    fix_val_y = np.load('E:/Uni/Masterarbeit/Semi-supervised/fixmatch_val_y.npy')
-    duplicates = np.load('E:/Uni/Masterarbeit/Semi-supervised/duplicates_plankton_x_fix.npy')
-    test1 = np.load('E:/Uni/Masterarbeit/Semi-supervised/no_duplicates_plankton_x_fix.npy')
-    test2 = np.load('E:/Uni/Masterarbeit/Semi-supervised/no_duplicates_plankton_y_fix.npy')
+    dir = sys.path.append(os.path.realpath('..'))
+    
+    fix_val = np.load(os.path.join('tables', 'fixmatch_val.npy'))
+    fix_val_y = np.load(os.path.join('tables', 'fixmatch_val_y.npy'))
+    duplicates = np.load(os.path.join('tables', 'duplicates_plankton_x_fix.npy'))
+    test1 = np.load(os.path.join('tables', 'no_duplicates_plankton_x_fix.npy'))
+    test2 = np.load(os.path.join('tables', 'no_duplicates_plankton_y_fix.npy'))
     dupe_index = []
     fix_val = np.reshape(fix_val, (-1, 64, 64))
     print(str(len(fix_val)))
@@ -67,5 +71,5 @@ def check_for_duplicates():
 
     images = np.reshape(images, (-1, 64, 64, 1))
 
-    np.save('no_duplicates_plankton_x_fix', images)
-    np.save('no_duplicates_plankton_y_fix', labels)
+    np.save(os.path.join('tables', 'no_duplicates_plankton_x_fix'), images)
+    np.save(os.path.join('tables', 'no_duplicates_plankton_y_fix'), labels)
