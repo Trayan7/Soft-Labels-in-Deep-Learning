@@ -131,3 +131,9 @@ dmypy.json
 
 # Wandb
 **/wandb
+
+# Results
+**/tables
+
+# Previews
+**/preview
